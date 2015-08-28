@@ -1,6 +1,7 @@
 ﻿//
 //  pcap.h
 
+#include "stdio.h"
  
 #ifndef pcaptest_pcap_h
 #define pcaptest_pcap_h
@@ -148,4 +149,5 @@ void prinfPcapFileHeader(pcap_file_header *pfh);
 void printfPcapHeader(pcap_header *ph);
 void printPcap(void * data,int size);
 int ipparse(unsigned  char* buffer);
+int parse_pcap(FILE* fp,unsigned char* buff);
 #endif

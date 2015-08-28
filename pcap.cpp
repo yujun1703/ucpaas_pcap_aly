@@ -3,6 +3,10 @@
 #include "pcap.h"
 #include <stdio.h>
 #include <arpa/inet.h>
+#include "malloc.h"
+#include "string.h"
+
+
 typedef unsigned long       DWORD;
 typedef int                 BOOL;
 typedef unsigned char       BYTE;
@@ -118,7 +122,7 @@ const char * getProtocol(BYTE Protocol)             //获取协议字段共8位
 	}
 }
 
-int ipparse(unsigned  char* buffer)
+int ipparse(unsigned  char* buffer,unsigned char* src_addr)
 {
 
 	printf("data:");
@@ -158,7 +162,8 @@ int ipparse(unsigned  char* buffer)
 
 	if (ip.Protocol == UDP)
 	{
-		
+		if(strcmp(inet_ntoa(*(in_addr*)&ip.SrcAddr，src_addr)==0)
+			return 1;	
 	}
 	return 0;
 }
@@ -201,3 +206,56 @@ void printfPcapHeader(pcap_header *ph){
 		   ph->len);
 }
  
+#define MAC_HEADER_LEN 14
+int parse_pcap(FILE* fp,unsigned char* buff)
+{
+		pcap_header  ph;
+		int readSize = 0;
+		memset(buff, 0, MAX_ETH_FRAME);
+
+
+		memset(buff, 0, MAX_ETH_FRAME);
+
+		//read pcap header to get a packet
+		//get only a pcap head count .
+		readSize = fread(&ph, sizeof(pcap_header), 1, fp);
+		if (readSize <= 0) {
+			return -1;
+		}
+
+		printfPcapHeader(&ph);
+
+		if (buff == NULL) {
+			fprintf(stderr, "malloc memory failed.\n");
+			return 0;
+		}
+
+		//read pcap body
+		readSize = fread(buff, 1, ph.capture_len, fp);
+
+		if (readSize != ph.capture_len) {
+			free(buff);
+			buff = NULL;
+			fprintf(stderr, "pcap file parse error.\n");
+			return 0;
+		}
+
+		int local = 0;
+		int mediatype = 1;//1:video;0:audio
+		//const char* dstaddr = "113.31.89.144";
+		const char* srcaddr = "172.16.2.113";
+
+		//parse ip header,escape mac header
+		int media = ipparse(buff + MAC_HEADER_LEN,srcaddr );
+		if (readSize < 200)
+		{
+			mediatype = 0;
+		}
+
+		//printf("===count:%d,readSize:%d===\n", count, readSize);
+		if (feof(fp) || readSize <= 0) {
+			return -1;
+		}
+}
+
+
